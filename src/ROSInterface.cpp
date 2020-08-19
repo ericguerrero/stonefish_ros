@@ -389,15 +389,67 @@ void ROSInterface::PublishUSBL(ros::Publisher& usblPub, USBL* usbl)
     usblPub.publish(msg);
 }
 
-std::pair<sensor_msgs::ImagePtr, sensor_msgs::CameraInfoPtr> ROSInterface::GenerateCameraMsgPrototypes(Camera* cam, bool depth)
+std::pair<sensor_msgs::ImagePtr, sensor_msgs::CameraInfoPtr> ROSInterface::GenerateColorCameraMsgPrototypes(ColorCamera* cam)
 {
     //Image message
     sensor_msgs::ImagePtr img = boost::make_shared<sensor_msgs::Image>();
     img->header.frame_id = cam->getName();
 	cam->getResolution(img->width, img->height);
-	img->encoding = depth ? "32FC1" : "rgb8";
+	img->encoding = "rgb8";
 	img->is_bigendian = 0;
-    img->step = img->width * (depth ? sizeof(float) : 3);
+    img->step = img->width * 3;
+    img->data.resize(img->step * img->height);
+
+	//Camera info message
+	sensor_msgs::CameraInfoPtr info = boost::make_shared<sensor_msgs::CameraInfo>();
+	info->header.frame_id = cam->getName();
+    info->width = img->width;
+    info->height = img->height;
+    info->binning_x = 0;
+    info->binning_y = 0;
+    //Distortion
+    info->distortion_model = "plumb_bob";
+    info->D.resize(5, 0.0);
+    //Rectification (for stereo only)
+    info->R[0] = 1.0;
+    info->R[4] = 1.0;
+    info->R[8] = 1.0;
+    //Intrinsic
+    double tanhfov2 = tan(cam->getHorizontalFOV()/180.0*M_PI/2.0);
+    double tanvfov2 = (double)info->height/(double)info->width * tanhfov2;
+    info->K[2] = (double)info->width/2.0; //cx
+    info->K[5] = (double)info->height/2.0; //cy
+    info->K[0] = info->K[2]/tanhfov2; //fx
+    info->K[4] = info->K[5]/tanvfov2; //fy 
+    info->K[8] = 1.0;
+    //Projection
+    double baseline = (double)cam->getHorizontalFOV();
+    info->P[2] = info->K[2]; //cx'
+    info->P[6] = info->K[5]; //cy'
+    info->P[0] = info->K[0]; //fx';
+    info->P[5] = info->K[4]; //fy';
+    info->P[3] = baseline;
+    info->P[7] = 0.0; //Ty;
+    info->P[10] = 1.0;
+    //ROI
+    info->roi.x_offset = 0;
+    info->roi.y_offset = 0;
+    info->roi.height = info->height;
+    info->roi.width = info->width;
+    info->roi.do_rectify = false;
+	
+    return std::make_pair(img, info);
+}
+
+std::pair<sensor_msgs::ImagePtr, sensor_msgs::CameraInfoPtr> ROSInterface::GenerateDepthCameraMsgPrototypes(DepthCamera* cam)
+{
+    //Image message
+    sensor_msgs::ImagePtr img = boost::make_shared<sensor_msgs::Image>();
+    img->header.frame_id = cam->getName();
+	cam->getResolution(img->width, img->height);
+	img->encoding = "32FC1";
+	img->is_bigendian = 0;
+    img->step = img->width * sizeof(float);
     img->data.resize(img->step * img->height);
 
 	//Camera info message
@@ -427,7 +479,7 @@ std::pair<sensor_msgs::ImagePtr, sensor_msgs::CameraInfoPtr> ROSInterface::Gener
     info->P[6] = info->K[5]; //cy'
     info->P[0] = info->K[0]; //fx';
     info->P[5] = info->K[4]; //fy';
-    info->P[3] = 0.0; //Tx - position of second camera from stereo pair
+    info->P[3] =  0.0; //Tx - position of second camera from stereo pair
     info->P[7] = 0.0; //Ty;
     info->P[10] = 1.0;
     //ROI

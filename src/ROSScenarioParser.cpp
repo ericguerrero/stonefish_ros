@@ -312,7 +312,7 @@ bool ROSScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
         pubs[sensorName + "/info"] = nh.advertise<sensor_msgs::CameraInfo>(topicStr + "/camera_info", queueSize);
         ColorCamera* cam = (ColorCamera*)robot->getSensor(sensorName);
         cam->InstallNewDataHandler(std::bind(&ROSSimulationManager::ColorCameraImageReady, sim, std::placeholders::_1));
-        camMsgProto[sensorName] = ROSInterface::GenerateCameraMsgPrototypes(cam, false);
+        camMsgProto[sensorName] = ROSInterface::GenerateColorCameraMsgPrototypes(cam);
     }
     else if(typeStr == "depthcamera")
     {
@@ -320,7 +320,7 @@ bool ROSScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
         pubs[sensorName + "/info"] = nh.advertise<sensor_msgs::CameraInfo>(topicStr + "/camera_info", queueSize);
         DepthCamera* cam = (DepthCamera*)robot->getSensor(sensorName);
         cam->InstallNewDataHandler(std::bind(&ROSSimulationManager::DepthCameraImageReady, sim, std::placeholders::_1));
-        camMsgProto[sensorName] = ROSInterface::GenerateCameraMsgPrototypes(cam, true);
+        camMsgProto[sensorName] = ROSInterface::GenerateDepthCameraMsgPrototypes(cam);
     }
     else if(typeStr == "multibeam2d")
     {
