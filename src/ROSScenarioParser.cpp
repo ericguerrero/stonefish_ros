@@ -308,11 +308,11 @@ bool ROSScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
     //--- Vision sensors
     else if(typeStr == "camera")
     {
-        pubs[sensorName] = nh.advertise<sensor_msgs::Image>(topicStr + "/image_color", queueSize);
+        pubs[sensorName] = nh.advertise<sensor_msgs::Image>(topicStr + "/image_raw", queueSize);
         pubs[sensorName + "/info"] = nh.advertise<sensor_msgs::CameraInfo>(topicStr + "/camera_info", queueSize);
         ColorCamera* cam = (ColorCamera*)robot->getSensor(sensorName);
         cam->InstallNewDataHandler(std::bind(&ROSSimulationManager::ColorCameraImageReady, sim, std::placeholders::_1));
-        camMsgProto[sensorName] = ROSInterface::GenerateCameraMsgPrototypes(cam, false);
+        camMsgProto[sensorName] = ROSInterface::GenerateCameraMsgPrototypes(cam, false, 0.0);
     }
     else if(typeStr == "depthcamera")
     {
@@ -320,7 +320,23 @@ bool ROSScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
         pubs[sensorName + "/info"] = nh.advertise<sensor_msgs::CameraInfo>(topicStr + "/camera_info", queueSize);
         DepthCamera* cam = (DepthCamera*)robot->getSensor(sensorName);
         cam->InstallNewDataHandler(std::bind(&ROSSimulationManager::DepthCameraImageReady, sim, std::placeholders::_1));
-        camMsgProto[sensorName] = ROSInterface::GenerateCameraMsgPrototypes(cam, true);
+        camMsgProto[sensorName] = ROSInterface::GenerateCameraMsgPrototypes(cam, true, 0.0);
+    }
+    else if(typeStr == "stereocamera")
+    {
+        pubs[sensorName + "/left"] = nh.advertise<sensor_msgs::Image>(topicStr + "/left/image_raw", queueSize);
+        pubs[sensorName + "/left/info"] = nh.advertise<sensor_msgs::CameraInfo>(topicStr + "/left/camera_info", queueSize);
+        pubs[sensorName + "/right"] = nh.advertise<sensor_msgs::Image>(topicStr + "/right/image_raw", queueSize);
+        pubs[sensorName + "/right/info"] = nh.advertise<sensor_msgs::CameraInfo>(topicStr + "/right/camera_info", queueSize);
+        StereoCamera* stereoCam = (StereoCamera*)robot->getSensor(sensorName);
+        std::pair<ColorCamera*,ColorCamera*> steroPair = stereoCam.getStereoPair();
+        ColorCamera* leftCam = steroPair.first();
+        ColorCamera* rightCam = steroPair.second();
+        leftCam->InstallNewDataHandler(std::bind(&ROSSimulationManager::ColorCameraImageReady, sim, std::placeholders::_1));
+        rightCam->InstallNewDataHandler(std::bind(&ROSSimulationManager::ColorCameraImageReady, sim, std::placeholders::_1));
+        Scalar baseline=stereoCam.getBaseline()
+        camMsgProto[sensorName + "/left"] = ROSInterface::GenerateCameraMsgPrototypes(leftCam, false, 0.0);
+        camMsgProto[sensorName + "/right"] = ROSInterface::GenerateCameraMsgPrototypes(rightCam, false, baseline);
     }
     else if(typeStr == "multibeam2d")
     {

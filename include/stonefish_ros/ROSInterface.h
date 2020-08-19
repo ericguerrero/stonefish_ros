@@ -66,7 +66,7 @@ namespace sf
         static void PublishContact(ros::Publisher& contactPub, Contact* cnt);
         static void PublishUSBL(ros::Publisher& usblPub, USBL* usbl);
 
-        static std::pair<sensor_msgs::ImagePtr, sensor_msgs::CameraInfoPtr> GenerateCameraMsgPrototypes(Camera* cam, bool depth);
+        static std::pair<sensor_msgs::ImagePtr, sensor_msgs::CameraInfoPtr> GenerateCameraMsgPrototypes(Camera* cam, bool depth, Scalar baseline);
         static std::pair<sensor_msgs::ImagePtr, sensor_msgs::ImagePtr> GenerateFLSMsgPrototypes(FLS* fls);
         static std::pair<sensor_msgs::ImagePtr, sensor_msgs::ImagePtr> GenerateSSSMsgPrototypes(SSS* sss);
         static std::pair<sensor_msgs::ImagePtr, sensor_msgs::ImagePtr> GenerateMSISMsgPrototypes(MSIS* msis);

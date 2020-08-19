@@ -336,6 +336,18 @@ void ROSSimulationManager::DepthCameraImageReady(DepthCamera* cam)
     pubs[cam->getName() + "/info"].publish(info);
 }
 
+// void ROSSimulationManager::StereoCameraImageReady(StereoCamera* cam)
+// {
+//     // Get stereoPair
+//     std::pair<ColorCamera*, ColorCamera*>  stereoPair = cam->getStereoPair();
+//     ColorCamera* leftCam = stereoPair.first;
+//     ColorCamera* rightCam = stereoPair.second;
+
+//     // Publish msgs
+//     ROSSimulationManager::ColorCameraImageReady(leftCam)
+//     ROSSimulationManager::ColorCameraImageReady(rightCam)
+// }
+
 void ROSSimulationManager::FLSScanReady(FLS* fls)
 {
     //Fill in the data message

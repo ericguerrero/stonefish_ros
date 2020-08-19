@@ -389,7 +389,7 @@ void ROSInterface::PublishUSBL(ros::Publisher& usblPub, USBL* usbl)
     usblPub.publish(msg);
 }
 
-std::pair<sensor_msgs::ImagePtr, sensor_msgs::CameraInfoPtr> ROSInterface::GenerateCameraMsgPrototypes(Camera* cam, bool depth)
+std::pair<sensor_msgs::ImagePtr, sensor_msgs::CameraInfoPtr> ROSInterface::GenerateCameraMsgPrototypes(Camera* cam, bool depth, Scalar baseline)
 {
     //Image message
     sensor_msgs::ImagePtr img = boost::make_shared<sensor_msgs::Image>();
@@ -427,7 +427,7 @@ std::pair<sensor_msgs::ImagePtr, sensor_msgs::CameraInfoPtr> ROSInterface::Gener
     info->P[6] = info->K[5]; //cy'
     info->P[0] = info->K[0]; //fx';
     info->P[5] = info->K[4]; //fy';
-    info->P[3] = 0.0; //Tx - position of second camera from stereo pair
+    info->P[3] = baseline; //Tx - position of second camera from stereo pair
     info->P[7] = 0.0; //Ty;
     info->P[10] = 1.0;
     //ROI
@@ -439,6 +439,7 @@ std::pair<sensor_msgs::ImagePtr, sensor_msgs::CameraInfoPtr> ROSInterface::Gener
 	
     return std::make_pair(img, info);
 }
+
 
 std::pair<sensor_msgs::ImagePtr, sensor_msgs::ImagePtr> ROSInterface::GenerateFLSMsgPrototypes(FLS* fls)
 {
